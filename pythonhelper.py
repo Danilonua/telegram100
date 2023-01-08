@@ -10,7 +10,6 @@ from handlers import filter_file
 mute_file.register_handlers_mute_file(dp)
 ban_file.register_handlers_ban_file(dp)
 warn_file.register_handlers_warn_file(dp)
-filter_file.register_handlers_filter_file(dp)
 
 
 @dp.message_handler(commands='start')
@@ -42,6 +41,9 @@ async def cmd_delete_message(message: types.Message):
         await bot.delete_message(message.chat.id, message.reply_to_message.message_id)
     else:
         await message.reply(f"This command can be used only by administration")
+
+
+filter_file.register_handlers_filter_file(dp)
 
 
 if __name__ == '__main__':
