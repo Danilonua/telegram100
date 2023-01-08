@@ -1,60 +1,188 @@
-from aiogram import Bot, types
-from aiogram.dispatcher import Dispatcher
+import time
+from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
-import logging
-from db import Database
+import datetime
 
-logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token="5806684198:AAHPUv9k_AcMXXfdmFZyPcFEDNSCDtRckUM")
+# Replace "TOKEN" with your bot's token
+API_TOKEN = '5806684198:AAGEM2M8hedneipmM1rSOrSiLE0gO1FVfNc'
+
+# Initialize bot and dispatcher
+bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
-db = Database("database.db")
 
-bad_words = ["бля", "сука", "блять", "дебил", "блядь", "пизда", "хуй", "член", "долбоеб"]
+# Dictionary to store warns for each user
+warns = {}
+
+# Dictionary to store mute status for each user
+mutes = {}
+bad_words = {'fuck', 'stupid'}
+ban_duration = 0
 
 
-@dp.message_handler(commands=["mute"], commands_prefix="/")
-async def mute(msg: types.Message):
-    if str(msg.from_user.id) == "1988813101":
-        if not msg.reply_to_message:
-            await msg.reply("Ета команда должна быть ответом на сообщение!")
+@dp.message_handler(commands='start')
+async def cmd_start(message: types.Message):
+    """
+    Start the bot
+    """
+
+    await message.reply("I'm a moderator bot! Use the /help command to see what I can do.")
+
+
+@dp.message_handler(commands='help')
+async def cmd_help(message: types.Message):
+    """
+    Show help message
+    """
+    await message.reply("Here are the commands you can use:\n\n/start - starts the bot\n/help - shows this help"
+                        " message\n/delete_message - deletes the current message\n/warn - warns the user\n/ban -"
+                        " bans the user\n/unban - unban the user\n/view_warns - view the warns of the user\n/mute -"
+                        " mute the user for 2 minutes\n/unmute - unmute the user")
+
+
+@dp.message_handler(commands='delete_message')
+async def cmd_delete_message(message: types.Message):
+    """
+    Delete current message
+    """
+    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
+        await bot.delete_message(message.chat.id, message.reply_to_message.message_id)
+    else:
+        await message.reply(f"This command can be used only by administration")
+
+
+@dp.message_handler(commands='warn')
+async def cmd_warn(message: types.Message):
+    """
+    Warn user
+    """
+    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
+
+        user_id = message.reply_to_message.from_user.id
+        if user_id not in warns:
+            warns[user_id] = 0
+        warns[user_id] += 1
+        if warns[user_id] >= 3:
+            await bot.kick_chat_member(message.chat.id, user_id)
+        await message.reply(f"User has been warned. They now have {warns[user_id]} warns.")
+    else:
+        await message.reply(f"This command can be used only by administration")
+
+
+@dp.message_handler(commands='view_warns')
+async def view_warns(message: types.Message):
+    """
+    View warns of user
+    """
+    user_id = message.reply_to_message.from_user.id
+    if user_id not in warns:
+        warns[user_id] = 0
+    await message.reply(f"This user has {warns[user_id]} warns.")
+
+
+async def cmd_ban(message: types.Message):
+    """
+    Ban user
+    """
+    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
+        user_id = message.reply_to_message.from_user.id
+
+        await bot.kick_chat_member(message.chat.id, user_id)
+        await message.reply("User has been banned.")
+    else:
+        await message.reply(f"This command can be used only by administration")
+
+
+@dp.message_handler(commands='unban')
+async def cmd_unban(message: types.Message):
+    """
+    Unban user
+    """
+    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
+        user_id = message.reply_to_message.from_user.id
+        await bot.unban_chat_member(message.chat.id, user_id)
+        await message.reply("User has been unbanned.")
+    else:
+        await message.reply(f"This command can be used only by administration")
+
+
+@dp.message_handler(commands='ban')
+async def ban(message: types.Message):
+    global ban_duration
+    """
+    Ban user for specified amount of time
+    """
+    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
+        # Get user ID of user to ban
+        try:
+            user_id = message.reply_to_message.from_user.id
+        except AttributeError:
+            await message.reply("This command should be reply to message!")
             return
-        mute_sec = int(msg.text[:6])
-        db.add_mute(msg.reply_to_message.from_user.id, mute_sec)
-        await msg.bot.delete_message(msg.chat.id, msg.message_id)
-        await msg.reply_to_message.reply(f"Пользователь был забанен на {mute_sec} секунд!")
+
+        # Get time to ban user for
+        try:
+            ban_duration = int(message.text[5:])
+        except ValueError:
+            if message.text == "/ban":
+                await cmd_ban(message)
+                return
+            else:
+                await message.reply("please type int number!")
+                return
+        if ban_duration <= 0:
+            await message.reply("Please type number that bigger then 0")
+            return
+
+        # Convert ban duration to integer
+        ban_duration = int(ban_duration)
+
+        # Calculate ban end time
+        until_date = datetime.datetime.now() + datetime.timedelta(days=ban_duration)
+        until_timestamp = int(until_date.timestamp())
+
+        # Ban user
+        await bot.kick_chat_member(message.chat.id, user_id, until_date=until_timestamp)
+        await message.reply(f"User has been banned for {ban_duration} days.")
+    else:
+        await message.reply(f"This command can be used only by administration")
 
 
-@dp.message_handler(commands=["ban"], commands_prefix="!/")
-async def cmd_ban(msg: types.Message):
-    if not msg.reply_to_message:
-        await msg.reply("Ета команда должна быть ответом на сообщение!")
-        return
-    await msg.bot.delete_message(msg.chat.id, msg.message_id)
-    await msg.bot.kick_chat_member(chat_id=msg.chat.id, user_id=msg.reply_to_message.from_user.id)
+@dp.message_handler(commands='mute')
+async def cmd_mute(message: types.Message):
+    """
+    Mute user for 2 minutes
+    """
+    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
+        user_id = message.reply_to_message.from_user.id
+        await bot.restrict_chat_member(message.chat.id, user_id, until_date=int(time.time() + 120))
+        mutes[user_id] = True
+        await message.reply("User has been muted for 2 minutes.")
+    else:
+        await message.reply(f"This command can be used only by administration")
 
 
-@dp.message_handler(content_types=["new_chat_members"])
-async def on_user_joined(msg: types.Message):
-    await msg.delete()
-    await msg.bot.send_message(chat_id=msg.chat.id, text="У нас новый пользователь, поприветствуем его!")
-
-
-@dp.message_handler(commands=['start'])
-async def process_start_command(msg: types.Message):
-    await msg.reply("Привет!\nНапиши мне что-нибудь!")
+@dp.message_handler(commands='unmute')
+async def cmd_unmute(message: types.Message):
+    """
+    Unmute user
+    """
+    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
+        user_id = message.reply_to_message.from_user.id
+        await bot.restrict_chat_member(message.chat.id, user_id, until_date=0)
+        mutes[user_id] = False
+        await message.reply("User has been unmuted.")
+    else:
+        await message.reply(f"This command can be used only by administration")
 
 
 @dp.message_handler()
-async def filter_message(msg: types.Message):
-    if not db.mute(msg.from_user.id):
-        text = msg.text.lower()
-        for word in bad_words:
-            if word in text:
-                await msg.delete()
-    else:
-        await msg.delete()
-
+async def cmd_filter_message(msg: types.Message):
+    text = msg.text.lower()
+    for word in bad_words:
+        if word in text:
+            await msg.delete()
 
 if __name__ == '__main__':
+    print('It has started!')
     executor.start_polling(dp)
