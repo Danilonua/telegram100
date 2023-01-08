@@ -1,23 +1,18 @@
-import time
-from aiogram import Bot, Dispatcher, types
+from aiogram import types
 from aiogram.utils import executor
 import datetime
-
-
-# Replace "TOKEN" with your bot's token
-API_TOKEN = '5806684198:AAGEM2M8hedneipmM1rSOrSiLE0gO1FVfNc'
-
-# Initialize bot and dispatcher
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
+from creat_bot import dp, bot
+from handlers import mute_file
 
 # Dictionary to store warns for each user
 warns = {}
 
 # Dictionary to store mute status for each user
-mutes = {}
 bad_words = {'fuck', 'stupid'}
 ban_duration = 0
+
+
+mute_file.register_handlers_mute_file(dp)
 
 
 @dp.message_handler(commands='start')
@@ -144,34 +139,6 @@ async def ban(message: types.Message):
         # Ban user
         await bot.kick_chat_member(message.chat.id, user_id, until_date=until_timestamp)
         await message.reply(f"User has been banned for {ban_duration} days.")
-    else:
-        await message.reply(f"This command can be used only by administration")
-
-
-@dp.message_handler(commands='mute')
-async def cmd_mute(message: types.Message):
-    """
-    Mute user for 2 minutes
-    """
-    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
-        user_id = message.reply_to_message.from_user.id
-        await bot.restrict_chat_member(message.chat.id, user_id, until_date=int(time.time() + 120))
-        mutes[user_id] = True
-        await message.reply("User has been muted for 2 minutes.")
-    else:
-        await message.reply(f"This command can be used only by administration")
-
-
-@dp.message_handler(commands='unmute')
-async def cmd_unmute(message: types.Message):
-    """
-    Unmute user
-    """
-    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
-        user_id = message.reply_to_message.from_user.id
-        await bot.restrict_chat_member(message.chat.id, user_id, until_date=0)
-        mutes[user_id] = False
-        await message.reply("User has been unmuted.")
     else:
         await message.reply(f"This command can be used only by administration")
 
