@@ -4,15 +4,13 @@ from creat_bot import dp, bot
 from handlers import mute_file
 from handlers import ban_file
 from handlers import warn_file
-
-
-# Dictionary to store mute status for each user
-bad_words = {'fuck', 'stupid'}
+from handlers import filter_file
 
 
 mute_file.register_handlers_mute_file(dp)
 ban_file.register_handlers_ban_file(dp)
 warn_file.register_handlers_warn_file(dp)
+filter_file.register_handlers_filter_file(dp)
 
 
 @dp.message_handler(commands='start')
@@ -45,13 +43,6 @@ async def cmd_delete_message(message: types.Message):
     else:
         await message.reply(f"This command can be used only by administration")
 
-
-@dp.message_handler()
-async def cmd_filter_message(msg: types.Message):
-    text = msg.text.lower()
-    for word in bad_words:
-        if word in text:
-            await msg.delete()
 
 if __name__ == '__main__':
     print('It has started!')
