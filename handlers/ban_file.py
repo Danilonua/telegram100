@@ -70,6 +70,6 @@ async def ban(message: types.Message):
         await message.reply(f"This command can be used only by administration")
 
 
-def register_handlers_mute_file(dp: Dispatcher):
+def register_handlers_ban_file(dp: Dispatcher):
     dp.register_message_handler(cmd_unban, commands='unban')
     dp.register_message_handler(ban, commands='ban')

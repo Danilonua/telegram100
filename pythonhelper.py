@@ -3,16 +3,16 @@ from aiogram.utils import executor
 from creat_bot import dp, bot
 from handlers import mute_file
 from handlers import ban_file
+from handlers import warn_file
 
-# Dictionary to store warns for each user
-warns = {}
 
 # Dictionary to store mute status for each user
 bad_words = {'fuck', 'stupid'}
 
 
 mute_file.register_handlers_mute_file(dp)
-ban_file.register_handlers_mute_file(dp)
+ban_file.register_handlers_ban_file(dp)
+warn_file.register_handlers_warn_file(dp)
 
 
 @dp.message_handler(commands='start')
@@ -44,35 +44,6 @@ async def cmd_delete_message(message: types.Message):
         await bot.delete_message(message.chat.id, message.reply_to_message.message_id)
     else:
         await message.reply(f"This command can be used only by administration")
-
-
-@dp.message_handler(commands='warn')
-async def cmd_warn(message: types.Message):
-    """
-    Warn user
-    """
-    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
-
-        user_id = message.reply_to_message.from_user.id
-        if user_id not in warns:
-            warns[user_id] = 0
-        warns[user_id] += 1
-        if warns[user_id] >= 3:
-            await bot.kick_chat_member(message.chat.id, user_id)
-        await message.reply(f"User has been warned. They now have {warns[user_id]} warns.")
-    else:
-        await message.reply(f"This command can be used only by administration")
-
-
-@dp.message_handler(commands='view_warns')
-async def view_warns(message: types.Message):
-    """
-    View warns of user
-    """
-    user_id = message.reply_to_message.from_user.id
-    if user_id not in warns:
-        warns[user_id] = 0
-    await message.reply(f"This user has {warns[user_id]} warns.")
 
 
 @dp.message_handler()
