@@ -22,7 +22,7 @@ async def cmd_help(message: types.Message):
                         " mute the user for 2 minutes\n/unmute - unmute the user")
 
 
-# @dp.message_handler(commands='delete_message')
+# @dp.message_handler(commands='delete')
 async def cmd_delete_message(message: types.Message):
     """
     Delete current message
@@ -33,7 +33,23 @@ async def cmd_delete_message(message: types.Message):
         await message.reply(f"This command can be used only by administration")
 
 
+async def cmd_pin(message: types.Message):
+    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
+        await bot.pin_chat_message(message.chat.id, message.reply_to_message.message_id)
+    else:
+        await message.reply(f"This command can be used only by administration")
+
+
+async def cmd_unpin(message: types.Message):
+    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
+        await bot.unpin_chat_message(message.chat.id, message.reply_to_message.message_id)
+    else:
+        await message.reply(f"This command can be used only by administration")
+
+
 def register_handlers_other_commands(dp: Dispatcher):
     dp.register_message_handler(cmd_start, commands='start')
     dp.register_message_handler(cmd_help, commands='help')
-    dp.register_message_handler(cmd_delete_message, commands='delete_message')
+    dp.register_message_handler(cmd_delete_message, commands='delete')
+    dp.register_message_handler(cmd_pin, commands='pin')
+    dp.register_message_handler(cmd_unpin, commands='unpin')
