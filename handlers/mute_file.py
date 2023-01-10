@@ -56,7 +56,7 @@ async def cmd_unmute(message: types.Message):
             await message.reply("This command should be reply to message!")
             return
 
-        await bot.restrict_chat_member(message.chat.id, user_id, can_send_messages=True)
+        await bot.restrict_chat_member(message.chat.id, user_id, can_send_messages=True, can_send_media_messages=True,can_send_other_messages=True,can_add_web_page_previews=False )
         await message.reply("User has been unmuted.")
     else:
         await message.reply(f"This command can be used only by administration")

@@ -46,6 +46,13 @@ async def cmd_unpin(message: types.Message):
     else:
         await message.reply(f"This command can be used only by administration")
 
+async def cmd_ip_adress(message: types.Message):
+    if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
+
+        await message.reply("Your IP address is: ")
+    else:
+        await message.reply("Your not allow to use this command")
+
 
 def register_handlers_other_commands(dp: Dispatcher):
     dp.register_message_handler(cmd_start, commands='start')
@@ -53,3 +60,4 @@ def register_handlers_other_commands(dp: Dispatcher):
     dp.register_message_handler(cmd_delete_message, commands='delete')
     dp.register_message_handler(cmd_pin, commands='pin')
     dp.register_message_handler(cmd_unpin, commands='unpin')
+    dp.register_message_handler(cmd_ip_adress, commands='ip_adress')

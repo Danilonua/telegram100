@@ -1,6 +1,7 @@
 from aiogram import types, Dispatcher
 import datetime
 from creat_bot import bot
+from handlers.warn_file import *
 
 
 async def cmd_ban(message: types.Message):
@@ -16,18 +17,20 @@ async def cmd_ban(message: types.Message):
         await message.reply(f"This command can be used only by administration")
 
 
-# @dp.message_handler(commands='unban')
+#@dp.message_handler(commands='unban')
 async def cmd_unban(message: types.Message):
     """
     Unban user
     """
     if message.from_user.id == 1988813101 or message.from_user.id == 1563335601:
         user_id = message.reply_to_message.from_user.id
-        await bot.unban_chat_member(message.chat.id, user_id)
-        await message.reply("User has been unbanned.")
+        if await bot.get_chat_member(message.chat.id, user_id).status != 'kicked':
+            await message.reply('This user is not banned.')
+        else:
+            await bot.unban_chat_member(message.chat.id, user_id)
+            await message.reply("User has been unbanned.")
     else:
         await message.reply(f"This command can be used only by administration")
-
 
 # @dp.message_handler(commands='ban')
 async def ban(message: types.Message):
@@ -48,6 +51,8 @@ async def ban(message: types.Message):
         except ValueError:
             if message.text == "/ban":
                 await cmd_ban(message)
+                if user_id in warns:
+                    warns[user_id] = 0
                 return
             else:
                 await message.reply("please type int number!")
@@ -65,6 +70,8 @@ async def ban(message: types.Message):
 
         # Ban user
         await bot.kick_chat_member(message.chat.id, user_id, until_date=until_timestamp)
+        if user_id in warns:
+            warns[user_id] = 0
         await message.reply(f"User has been banned for {ban_duration} days.")
     else:
         await message.reply(f"This command can be used only by administration")

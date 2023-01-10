@@ -17,6 +17,7 @@ async def cmd_warn(message: types.Message):
         warns[user_id] += 1
         if warns[user_id] >= 3:
             await bot.kick_chat_member(message.chat.id, user_id)
+            warns[user_id] = 0
         await message.reply(f"User has been warned. They now have {warns[user_id]} warns.")
     else:
         await message.reply(f"This command can be used only by administration")
